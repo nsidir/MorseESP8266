@@ -5,15 +5,18 @@
 #include "index.h" //Webpage contents
 #include "credentials.h"
 
+const char* ssid = ssid; 
+const char* password = password; 
+
 ESP8266WebServer server(80);
 
-const int buttonPin = 2; // Pin where the button is connected
+int buttonPin = D2;
+int ledPin = D7; 
+
 int buttonState = 0;    // Variable to store the button state
 int lastButtonState = 0; // Variable to store the previous button state
 unsigned long lastDebounceTime = 0; // Last time the button state changed
 unsigned long debounceDelay = 50; // Debounce delay in milliseconds
-
-int ledPin = D7; 
 
 void dot() {
   digitalWrite(ledPin, HIGH);
