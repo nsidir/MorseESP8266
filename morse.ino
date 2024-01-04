@@ -3,11 +3,15 @@
 #include <ESP8266WebServer.h>
 
 #include "index.h" //Webpage contents
-
-const char* ssid = " "; 
-const char* password = " "; 
+#include "credentials.h"
 
 ESP8266WebServer server(80);
+
+const int buttonPin = 2; // Pin where the button is connected
+int buttonState = 0;    // Variable to store the button state
+int lastButtonState = 0; // Variable to store the previous button state
+unsigned long lastDebounceTime = 0; // Last time the button state changed
+unsigned long debounceDelay = 50; // Debounce delay in milliseconds
 
 int ledPin = D7; 
 
@@ -114,6 +118,7 @@ void setup(void){
   Serial.begin(9600);
 
   pinMode(ledPin, OUTPUT);
+  pinMode(buttonPin, INPUT);
   
   WiFi.begin(ssid, password);     
   Serial.println("");
@@ -140,5 +145,25 @@ void setup(void){
 //                     LOOP
 //==============================================================
 void loop(void){
-  server.handleClient();       
+  server.handleClient();     
+
+  int reading = digitalRead(buttonPin);
+
+  if (reading != lastButtonState) {
+    lastDebounceTime = millis();
+  }
+
+  if ((millis() - lastDebounceTime) > debounceDelay) {
+    if (reading != buttonState) {
+      buttonState = reading;
+
+      if (buttonState == HIGH) {
+        // Button pressed, send Morse code and character
+        Serial.println("Button Pressed");
+      }
+    }
+  }
+
+  lastButtonState = reading;
+  
 }
