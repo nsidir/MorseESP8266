@@ -13,6 +13,8 @@ ESP8266WebServer server(80);
 
 WiFiClient client;
 
+String morseWord;
+
 int buttonPin = D1;
 int ledPin = D7; 
 
@@ -120,6 +122,10 @@ void handleDecode() {
   server.send(200, "text/plain", "Message received: " + message);
 }
 
+void handleReceive() {
+  server.send(200, "text/plain", "Morse Word is: " + morseWord);
+}
+
 //==============================================================
 //                  SETUP
 //==============================================================
@@ -147,6 +153,8 @@ void setup(void){
 
   server.on("/decode", HTTP_GET, handleDecode);
 
+  server.on("/receive", HTTP_POST, handleReceive);
+  
   server.begin();
   Serial.println("HTTP server started");
 }
@@ -159,17 +167,22 @@ void loop(void){
   buttonState = digitalRead(buttonPin); // read the button input
 
   if (buttonState != lastButtonState) { // button state changed
-     updateState();
+    updateState(morseWord);
   }
 
   lastButtonState = buttonState;        // save state for next loop
 
-  
+  if (holdTime >= 3000) {
+    //Serial.print("Sent Word");
+    client.print(String("POST ") + "/receive HTTP/1.1\r\nHost: 192.168.1.8\r\nUser-Agent: BuildFailureDetectorESP8266\r\nConnection: close\r\n\r\n");
+    //Serial.print("Sent the Morse Code");
+    morseWord = "";
+    //server.send(200, "text/plain", "Morse Word is: " + morseWord);
+  }
 }
 
-void updateState() {
+void updateState(String& morseWord) {
   // the button has been just pressed
-  String morseWord;
   if (buttonState == HIGH) {
       startPressed = millis();
       idleTime = startPressed - endPressed;
@@ -186,36 +199,14 @@ void updateState() {
       endPressed = millis();
       holdTime = endPressed - startPressed;
 
-      if (holdTime > 20 && holdTime < 500) {
+      if (holdTime > 20 && holdTime < 300) {
           Serial.print("."); 
           morseWord += '.';
       }
 
-      if (holdTime >= 500 && holdTime < 3000) {
+      if (holdTime >= 300 && holdTime < 3000) {
           Serial.print("-"); 
           morseWord += '-';
-      }
-
-      if (holdTime >= 3000) {
-        if (WiFi.status() == WL_CONNECTED) { //Check WiFi connection status
- 
-          HTTPClient http;    //Declare object of class HTTPClient
-      
-          http.begin(client, "http://192.168.1.8/");      //Specify request destination
-          http.addHeader("Content-Type", "text/plain");  //Specify content-type header
-      
-          int httpCode = http.POST("Morse Word");   //Send the request
-          String payload = http.getString();                  //Get the response payload
-      
-          Serial.println(httpCode);   //Print HTTP return code
-          Serial.println(payload);    //Print request response payload
-      
-          http.end();  //Close connection
-      
-        } 
-        Serial.print("Sent Word");
-        Serial.print(morseWord);
-        //morseWord = "";
       }
 
   }

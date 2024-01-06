@@ -29,7 +29,7 @@ const char MAIN_page[] PROGMEM = R"=====(
     };
 
     function morseToAlphabet(morseCode) {
-      const words = morseCode.split('   '); // Morse code words are separated by three spaces
+      const words = morseCode.split(' '); // Morse code words are separated by three spaces
       let result = '';
 
       for (const word of words) {
@@ -43,7 +43,26 @@ const char MAIN_page[] PROGMEM = R"=====(
       return result.trim(); // Remove leading/trailing spaces
     }
 
-     $.post('/');
+  var serverEndpoint = 'http://192.168.1.8/receive';
+  var intervalTime = 1000; // Adjust the interval time in milliseconds
+
+  function checkForResponses() {
+    $.post({
+      url: serverEndpoint,
+      contentType: 'text/plain',
+      success: function(response) {
+        console.log('Server response:', response);
+        $('#morseWord').html(response + '<br>');
+        // Handle the response as needed
+      },
+      error: function(error) {
+        console.error('Error:', error);
+      }
+    });
+  }
+
+  // Set up an interval to check for responses continuously
+  var checkInterval = setInterval(checkForResponses, intervalTime);
 
     function sendToESP() {
       var userInput = $('#inputText').val();
